@@ -4,33 +4,68 @@ import {
   createContext,
   useContext,
   useEffect,
-  useState,
+  useReducer,
 } from "react"
 import type { ITOCDocument } from "./models"
 import { TOCService } from "./services"
-import { IAppContextProps } from "./App.types"
+import type { IAppAction, IAppContextProps } from "./App.types"
+
+const initialState: IAppContextProps = {
+  selectedComponent: null,
+  data: [],
+  selectedLevel: "",
+  handleLevelClick: () => null,
+}
+
+enum actions {
+  SET_SELECTED_COMPONENT = "@SET_SELECTED_COMPONENT",
+  SET_DATA = "@SET_DATA",
+  SET_SELECTED_LEVEL = "@SET_SELECTED_LEVEL",
+}
+
+const reducer = (
+  state: IAppContextProps,
+  action: IAppAction,
+): IAppContextProps => {
+  switch (action.type) {
+    case actions.SET_SELECTED_COMPONENT:
+      return {
+        ...state,
+        selectedComponent: action.payload as ITOCDocument,
+      }
+    case actions.SET_DATA:
+      return {
+        ...state,
+        data: action.payload as ITOCDocument[],
+      }
+    case actions.SET_SELECTED_LEVEL:
+      return {
+        ...state,
+        selectedLevel: action.payload as string,
+      }
+    default:
+      return state
+  }
+}
 
 const AppContext = createContext<IAppContextProps | undefined>(undefined)
 
 const AppProvider: FC<PropsWithChildren> = ({ children }) => {
-  const [selectedComponent, setSelectedComponent] =
-    useState<ITOCDocument | null>(null)
-
-  const [data, setData] = useState<ITOCDocument[]>([])
-  const [selectedLevel, setSelectedLevel] = useState<NonNullable<string>>("")
+  const [state, dispatch] = useReducer(reducer, initialState)
 
   const handleLevelClick = (item: ITOCDocument) => {
-    setSelectedLevel(item.level === 1 ? `${item.id}` : `${item.parent_id}`);
-    setSelectedComponent(item);
-  };
+    const selectedLevel = item.level === 1 ? `${item.id}` : `${item.parent_id}`
+    dispatch({ type: actions.SET_SELECTED_LEVEL, payload: selectedLevel })
+    dispatch({ type: actions.SET_SELECTED_COMPONENT, payload: item })
+  }
 
   useEffect(() => {
     const fetchData = async () => {
       const tocService = new TOCService()
       const response = await tocService.getTOCData()
       if (response) {
-        setData(response)
-        setSelectedComponent(response[0])
+        dispatch({ type: actions.SET_DATA, payload: response })
+        dispatch({ type: actions.SET_SELECTED_COMPONENT, payload: response[0] })
       }
     }
 
@@ -38,15 +73,7 @@ const AppProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [])
 
   return (
-    <AppContext.Provider
-      value={{
-        selectedComponent,
-        setSelectedComponent,
-        data,
-        handleLevelClick,
-        selectedLevel,
-      }}
-    >
+    <AppContext.Provider value={{ ...state, handleLevelClick }}>
       {children}
     </AppContext.Provider>
   )

@@ -1,21 +1,11 @@
 import classnames from "classnames"
-import React, { useEffect, useRef } from "react"
-import type { ITOCDocument } from "@models/toc.model"
+import type { FC } from "react"
 import { useAppContext } from "../../App.provider"
+import { usePanelItem } from "./panel.hooks"
 
-interface PanelProps {
-  components: ITOCDocument[]
-}
-
-const Panel: React.FC<PanelProps> = ({ components }) => {
-  const { selectedComponent, handleLevelClick } = useAppContext()
-  const selectedRef = useRef<HTMLLIElement>(null)
-
-  useEffect(() => {
-    if (selectedRef.current) {
-      selectedRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
-  }, [selectedComponent])
+const Panel: FC = () => {
+  const { selectedComponent, handleLevelClick, data: components } = useAppContext()
+  const selectedRef = usePanelItem(selectedComponent);
 
   return (
     <div className="text-left">

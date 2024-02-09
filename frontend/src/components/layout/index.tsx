@@ -9,7 +9,6 @@ const Layout: FC<ILayoutProps> = ({ children, sidebar, classNames }) => {
       [LayoutCSS.Container]: !classNames
     })}>
       <div className={LayoutCSS.Sidebar}>{sidebar}</div>
-
       <div className={LayoutCSS.MainView}>{children}</div>
     </div>
   )
